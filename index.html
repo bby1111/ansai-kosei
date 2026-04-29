@@ -101,6 +101,7 @@
             border-radius: 20px;
             font-size: 0.82rem;
             cursor: pointer;
+            display: inline-block;
         }
 
         .upload-box img.preview {
@@ -235,17 +236,17 @@
             <input type="file" accept="image/*" id="file1" onchange="handleFile(1,this)">
             <div class="box-label">1枚目</div>
             <div class="icon">📄</div>
-            <button class="select-btn" onclick="document.getElementById('file1').click()">写真を選択</button>
+            <label for="file1" class="select-btn">写真を選択</label>
             <img class="preview" id="preview1">
-            <button class="remove-btn" onclick="removeFile(event,1)">✕</button>
+            <button type="button" class="remove-btn" onclick="removeFile(event,1)">✕</button>
         </div>
         <div class="upload-box" id="box2">
             <input type="file" accept="image/*" id="file2" onchange="handleFile(2,this)">
             <div class="box-label">2枚目</div>
             <div class="icon">📄</div>
-            <button class="select-btn" onclick="document.getElementById('file2').click()">写真を選択</button>
+            <label for="file2" class="select-btn">写真を選択</label>
             <img class="preview" id="preview2">
-            <button class="remove-btn" onclick="removeFile(event,2)">✕</button>
+            <button type="button" class="remove-btn" onclick="removeFile(event,2)">✕</button>
         </div>
     </div>
 
