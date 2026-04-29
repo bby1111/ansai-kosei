@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>答案構成メーカー</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 24px 16px 48px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 24px;
+            color: #111;
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+
+        .card-label {
+            font-size: 0.78rem;
+            color: #888;
+            font-weight: bold;
+            letter-spacing: 0.05em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        /* API Key */
+        #apiKeyInput {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+            color: #333;
+        }
+        #apiKeyInput:focus { border-color: #4a90e2; }
+
+        /* Upload */
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .upload-box {
+            border: 2px dashed #d0d0d0;
+            border-radius: 14px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.2s, background 0.2s;
+            background: #fafafa;
+        }
+        .upload-box:hover { border-color: #4a90e2; background: #f0f6ff; }
+        .upload-box.has-image { border-style: solid; border-color: #4a90e2; }
+
+        .upload-box input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            font-size: 0; /* prevent iOS zoom */
+        }
+
+        .upload-box .box-label {
+            font-size: 0.78rem;
+            font-weight: bold;
+            color: #888;
+            margin-bottom: 6px;
+        }
+
+        .upload-box .icon { font-size: 2rem; margin-bottom: 4px; }
+
+        .upload-box .hint {
+            font-size: 0.75rem;
+            color: #bbb;
+            text-align: center;
+            padding: 0 8px;
+        }
+
+        .upload-box img.preview {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .upload-box .remove-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(0,0,0,0.55);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        .upload-box.has-image .remove-btn { display: flex; }
+
+        /* Button */
+        #generateBtn {
+            width: 100%;
+            padding: 16px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 16px;
+            transition: background 0.2s, opacity 0.2s;
+            letter-spacing: 0.03em;
+        }
+        #generateBtn:hover { background: #1d4ed8; }
+        #generateBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Error */
+        .error {
+            background: #fff1f1;
+            border: 1.5px solid #fca5a5;
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: #b91c1c;
+            font-size: 0.88rem;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+            margin: 0 auto 14px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading p { color: #666; font-size: 0.9rem; }
+
+        /* Output */
+        .output-section { display: none; }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .output-header h2 { font-size: 1rem; color: #111; }
+
+        .copy-btn {
+            padding: 7px 14px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.83rem;
+            cursor: pointer;
+            color: #374151;
+            transition: background 0.15s;
+        }
+        .copy-btn:hover { background: #e5e7eb; }
+
+        .output-text {
+            white-space: pre-wrap;
+            font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
+            font-size: 0.88rem;
+            line-height: 1.85;
+            color: #1a1a1a;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 16px;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 400px) {
+            .upload-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>答案構成メーカー</h1>
+
+    <!-- API Key -->
+    <div class="card">
+        <div class="card-label">Gemini APIキー</div>
+        <input type="password" id="apiKeyInput" placeholder="AIza..." autocomplete="off">
+    </div>
+
+    <!-- Upload -->
+    <div class="upload-grid">
+        <div class="upload-box" id="box1">
+            <input type="file" accept="image/*" id="file1" onchange="handleFile(1,this)">
+            <div class="box-label">1枚目</div>
+            <div class="icon">📄</div>
+            <div class="hint">タップして写真を選択</div>
+            <img class="preview" id="preview1">
+            <button class="remove-btn" onclick="removeFile(event,1)">✕</button>
+        </div>
+        <div class="upload-box" id="box2">
+            <input type="file" accept="image/*" id="file2" onchange="handleFile(2,this)">
+            <div class="box-label">2枚目</div>
+            <div class="icon">📄</div>
+            <div class="hint">タップして写真を選択</div>
+            <img class="preview" id="preview2">
+            <button class="remove-btn" onclick="removeFile(event,2)">✕</button>
+        </div>
+    </div>
+
+    <!-- Error -->
+    <div class="error" id="error"></div>
+
+    <!-- Generate -->
+    <button id="generateBtn" onclick="generate()">答案構成を生成する</button>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>答案を分析中です… しばらくお待ちください</p>
+    </div>
+
+    <!-- Output -->
+    <div class="card output-section" id="outputSection">
+        <div class="output-header">
+            <h2>答案構成</h2>
+            <button class="copy-btn" id="copyBtn" onclick="copyOutput()">コピー</button>
+        </div>
+        <div class="output-text" id="outputText"></div>
+    </div>
+</div>
+
+<script>
+    const imageData = [null, null];
+
+    window.onload = () => {
+        const saved = localStorage.getItem('geminiApiKey');
+        if (saved) document.getElementById('apiKeyInput').value = saved;
+    };
+
+    document.getElementById('apiKeyInput').addEventListener('blur', e => {
+        if (e.target.value) localStorage.setItem('geminiApiKey', e.target.value);
+    });
+
+    function handleFile(num, input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            const dataUrl = e.target.result;
+            imageData[num - 1] = {
+                base64: dataUrl.split(',')[1],
+                mimeType: file.type
+            };
+            const preview = document.getElementById(`preview${num}`);
+            preview.src = dataUrl;
+            preview.style.display = 'block';
+            document.getElementById(`box${num}`).classList.add('has-image');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeFile(e, num) {
+        e.stopPropagation();
+        imageData[num - 1] = null;
+        const preview = document.getElementById(`preview${num}`);
+        preview.src = '';
+        preview.style.display = 'none';
+        document.getElementById(`box${num}`).classList.remove('has-image');
+        document.getElementById(`file${num}`).value = '';
+    }
+
+    async function generate() {
+        const apiKey = document.getElementById('apiKeyInput').value.trim();
+        if (!apiKey) { showError('APIキーを入力してください'); return; }
+        if (!imageData[0] || !imageData[1]) { showError('写真を2枚とも選択してください'); return; }
+
+        localStorage.setItem('geminiApiKey', apiKey);
+        setLoading(true);
+        hideError();
+        document.getElementById('outputSection').style.display = 'none';
+
+        const prompt = `あなたは司法予備試験の答案構成の専門家です。
+
+添付の模範答案（2枚、連続したページ）を分析し、答案構成を作成してください。
+
+【ラインマーカーの意味】
+- ピンク色 → 問題提起
+- オレンジ色 → 論点
+- 黄色 → 重要部分（規範・定義・当てはめのポイント）
+
+【出力フォーマット】
+以下の形式・記号を厳守してください。
+
+１　前段
+（１）請求の概要（条文番号）
+　①要件・事実確認
+　ア.　論点名（条文番号）
+　　（ア）趣旨：〜
+　　∴〇〇＝〜（規範・定義）
+　　（イ）本件：当てはめ
+　　⇔反論・区別すべき点（あれば）
+　　→結論 ◯ または ✕
+　イ.　次の論点
+　　…
+
+【記号の使い方】
+→ 結論・帰結
+⇔ 反論・区別
+∴ したがって（規範・結論）
+◯ 成立・認められる
+✕ 不成立・認められない
+
+ラインマーカーに基づいて：
+- ピンク部分 → 問題提起・請求の内容として冒頭に
+- オレンジ部分 → 各論点（ア. イ. ウ.）として
+- 黄色部分 → 規範・定義（∴の箇所）として
+
+答案全体の構造を漏らさず出力してください。`;
+
+        try {
+            const res = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [
+                                { text: prompt },
+                                { inline_data: { mime_type: imageData[0].mimeType, data: imageData[0].base64 } },
+                                { inline_data: { mime_type: imageData[1].mimeType, data: imageData[1].base64 } }
+                            ]
+                        }],
+                        generationConfig: { temperature: 0.1, maxOutputTokens: 4096 }
+                    })
+                }
+            );
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error?.message || `APIエラー (${res.status})`);
+            }
+
+            const data = await res.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!text) throw new Error('出力を取得できませんでした');
+
+            document.getElementById('outputText').textContent = text;
+            document.getElementById('outputSection').style.display = 'block';
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+
+        } catch (err) {
+            showError(err.message || 'エラーが発生しました');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function copyOutput() {
+        const text = document.getElementById('outputText').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById('copyBtn');
+            btn.textContent = 'コピーしました ✓';
+            setTimeout(() => btn.textContent = 'コピー', 2000);
+        });
+    }
+
+    function setLoading(on) {
+        document.getElementById('loading').style.display = on ? 'block' : 'none';
+        document.getElementById('generateBtn').disabled = on;
+    }
+
+    function showError(msg) {
+        const el = document.getElementById('error');
+        el.textContent = msg;
+        el.style.display = 'block';
+    }
+
+    function hideError() {
+        document.getElementById('error').style.display = 'none';
+    }
+</script>
+</body>
+</html>
