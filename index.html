@@ -74,22 +74,14 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
             position: relative;
             overflow: hidden;
             transition: border-color 0.2s, background 0.2s;
             background: #fafafa;
         }
-        .upload-box:hover { border-color: #4a90e2; background: #f0f6ff; }
         .upload-box.has-image { border-style: solid; border-color: #4a90e2; }
 
-        .upload-box input[type="file"] {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            cursor: pointer;
-            font-size: 0; /* prevent iOS zoom */
-        }
+        .upload-box input[type="file"] { display: none; }
 
         .upload-box .box-label {
             font-size: 0.78rem;
@@ -100,11 +92,15 @@
 
         .upload-box .icon { font-size: 2rem; margin-bottom: 4px; }
 
-        .upload-box .hint {
-            font-size: 0.75rem;
-            color: #bbb;
-            text-align: center;
-            padding: 0 8px;
+        .select-btn {
+            margin-top: 8px;
+            padding: 8px 16px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            cursor: pointer;
         }
 
         .upload-box img.preview {
@@ -124,9 +120,9 @@
             color: white;
             border: none;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            font-size: 0.75rem;
+            width: 28px;
+            height: 28px;
+            font-size: 0.8rem;
             cursor: pointer;
             display: none;
             align-items: center;
@@ -239,7 +235,7 @@
             <input type="file" accept="image/*" id="file1" onchange="handleFile(1,this)">
             <div class="box-label">1枚目</div>
             <div class="icon">📄</div>
-            <div class="hint">タップして写真を選択</div>
+            <button class="select-btn" onclick="document.getElementById('file1').click()">写真を選択</button>
             <img class="preview" id="preview1">
             <button class="remove-btn" onclick="removeFile(event,1)">✕</button>
         </div>
@@ -247,7 +243,7 @@
             <input type="file" accept="image/*" id="file2" onchange="handleFile(2,this)">
             <div class="box-label">2枚目</div>
             <div class="icon">📄</div>
-            <div class="hint">タップして写真を選択</div>
+            <button class="select-btn" onclick="document.getElementById('file2').click()">写真を選択</button>
             <img class="preview" id="preview2">
             <button class="remove-btn" onclick="removeFile(event,2)">✕</button>
         </div>
